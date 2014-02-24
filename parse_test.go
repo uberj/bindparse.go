@@ -5,6 +5,7 @@ import (
     "fmt"
     "github.com/uberj/bindparse/scanner"
     "github.com/uberj/bindparse/parse"
+    "github.com/uberj/bindparse/rdtype"
 )
 
 func AssertEqual(t *testing.T, is string, shouldbe string) bool {
@@ -30,8 +31,9 @@ func TestParseSOA_1(t *testing.T) {
     soa, err := parse.ParseRecord(zs, s, rdd)
     if err != nil {
         t.Fatalf("%s\n", err)
-    } else {
-        fmt.Println(soa)
+    }
+    if type_, ok := soa.(rdtype.SOA); !ok {
+        t.Fatalf("Expected type rdtype.SOA but unexpected type %T\n", type_)
     }
 }
 
@@ -48,8 +50,9 @@ func TestParseSOA_2(t *testing.T) {
     soa, err := parse.ParseRecord(zs, s, rdd)
     if err != nil {
         t.Fatalf("%s\n", err)
-    } else {
-        fmt.Println(soa)
+    }
+    if type_, ok := soa.(rdtype.SOA); !ok {
+        t.Fatalf("Expected type rdtype.SOA but unexpected type %T\n", type_)
     }
 }
 
@@ -61,8 +64,9 @@ func TestParseSOA_3(t *testing.T) {
     soa, err := parse.ParseRecord(zs, s, rdd)
     if err != nil {
         t.Fatalf("%s\n", err)
-    } else {
-        fmt.Println(soa)
+    }
+    if type_, ok := soa.(rdtype.SOA); !ok {
+        t.Fatalf("Expected type rdtype.SOA but unexpected type %T\n", type_)
     }
 }
 
@@ -74,8 +78,9 @@ func TestParseSOA_4(t *testing.T) {
     soa, err := parse.ParseRecord(zs, s, rdd)
     if err != nil {
         t.Fatalf("%s\n", err)
-    } else {
-        fmt.Println(soa)
+    }
+    if type_, ok := soa.(rdtype.SOA); !ok {
+        t.Fatalf("Expected type rdtype.SOA but unexpected type %T\n", type_)
     }
 }
 
@@ -87,8 +92,9 @@ func TestParseSOA_5(t *testing.T) {
     soa, err := parse.ParseRecord(zs, s, rdd)
     if err != nil {
         t.Fatalf("%s\n", err)
-    } else {
-        fmt.Println(soa)
+    }
+    if type_, ok := soa.(rdtype.SOA); !ok {
+        t.Fatalf("Expected type rdtype.SOA but unexpected type %T\n", type_)
     }
 }
 
@@ -100,8 +106,9 @@ func TestParseSOA_6(t *testing.T) {
     soa, err := parse.ParseRecord(zs, s, rdd)
     if err != nil {
         t.Fatalf("%s\n", err)
-    } else {
-        fmt.Println(soa)
+    }
+    if type_, ok := soa.(rdtype.SOA); !ok {
+        t.Fatalf("Expected type rdtype.SOA but unexpected type %T\n", type_)
     }
 }
 
