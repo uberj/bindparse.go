@@ -22,24 +22,24 @@ func main() {
     //s := scanner.Scanner{Source: string(content)}
     s := &scanner.Scanner{Source: string(content)}
     cur := <-s.NextUntil(`[\(\n]`);
-    fmt.Printf("cur='%s'\n", cur.Token)
+    fmt.Printf("cur='%s'\n", cur.Value)
     cur = <-s.NextUntil(`[\(\n]`);
-    fmt.Printf("cur='%s'\n", cur.Token)
+    fmt.Printf("cur='%s'\n", cur.Value)
     cur = <-s.NextUntil(`[\(\n]`);
-    fmt.Printf("cur='%s'\n", cur.Token)
+    fmt.Printf("cur='%s'\n", cur.Value)
     return
     peeker := s.Peekn(3)
-    fmt.Printf("peek1='%s'\n", (<-peeker).Token)
-    fmt.Printf("peek2='%s'\n", (<-peeker).Token)
-    fmt.Printf("peek3='%s'\n", (<-peeker).Token)
+    fmt.Printf("peek1='%s'\n", (<-peeker).Value)
+    fmt.Printf("peek2='%s'\n", (<-peeker).Value)
+    fmt.Printf("peek3='%s'\n", (<-peeker).Value)
     i := 1
     for {
         if n = <-s.Next(); n.End {
             break
         }
-        fmt.Printf("(%d) Token: '%s'\n", i,  n.Token)
+        fmt.Printf("(%d) Token: '%s'\n", i,  n.Value)
         p := <-s.Peek()
-        fmt.Printf("(%d) Peek Token is: '%s'\n", i + 1, p.Token)
+        fmt.Printf("(%d) Peek Token is: '%s'\n", i + 1, p.Value)
         i++
     }
 }

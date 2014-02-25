@@ -105,11 +105,11 @@ func ParseRecord(zstate *ZoneState, s *scanner.Scanner, dispatch *rdTypeDispatch
         cur := tokens[i]
         next := tokens[i + 1]
 
-        _, valid_class = RDCLASS[strings.ToUpper(cur.Token)]
-        _, valid_rdtype := dispatch.RDType[strings.ToUpper(next.Token)]
+        _, valid_class = RDCLASS[strings.ToUpper(cur.Value)]
+        _, valid_rdtype := dispatch.RDType[strings.ToUpper(next.Value)]
 
-        rdclass = cur.Token
-        rdtype_ = next.Token
+        rdclass = cur.Value
+        rdtype_ = next.Value
 
         if valid_class && valid_rdtype {
             switch i {
@@ -126,9 +126,9 @@ func ParseRecord(zstate *ZoneState, s *scanner.Scanner, dispatch *rdTypeDispatch
                 // ttl class type
                 // or
                 // name class type
-                ttl_, is_ttl := strconv.ParseInt(tokens[0].Token, 0, 64)
+                ttl_, is_ttl := strconv.ParseInt(tokens[0].Value, 0, 64)
                 if is_ttl != nil {
-                    name = TrueName(zstate, tokens[0].Token)
+                    name = TrueName(zstate, tokens[0].Value)
                     ttl = zstate.Ttl
                 } else {
                     name = TrueName(zstate, "@")
@@ -140,8 +140,8 @@ func ParseRecord(zstate *ZoneState, s *scanner.Scanner, dispatch *rdTypeDispatch
                 <-s.Next()
                 <-s.Next()
                 <-s.Next()
-                name = TrueName(zstate, tokens[0].Token)
-                ttl_, err := strconv.ParseInt(tokens[1].Token, 0, 64)
+                name = TrueName(zstate, tokens[0].Value)
+                ttl_, err := strconv.ParseInt(tokens[1].Value, 0, 64)
                 if err != nil {
                     return nil, err
                 }
@@ -158,12 +158,12 @@ DISPATCH:
 func ParseComment(s *scanner.Scanner) (bool, string, error) {
     // ParseComment: Consume a comment if it exists. Stop leaving \n next
     next := <-s.PeekUntil(`[\n;]`);
-    if next.Token != ";" {
+    if next.Value != ";" {
         return false, "", nil
     }
     for {
         peek := <-s.Peek()
-        if peek.Token == "\n" {
+        if peek.Value == "\n" {
             break
         }
         <-s.Next()
@@ -177,7 +177,7 @@ func ParseNewLines(s *scanner.Scanner) (bool, error) {
     for {
         peek := <-s.Peek()
         //if err := goodToken(&peek); err != nil {return false, err}
-        if peek.Token == "\n" {
+        if peek.Value == "\n" {
             ret = true
             <-s.Next()
             continue
@@ -213,7 +213,7 @@ func requireInt32(p string) (int32, error){
 func parseSOAInt32(s *scanner.Scanner, cur scanner.Token) (int32, error) {
     cur = <-s.Next();
     if err := goodToken(&cur); err != nil {return 0, err}
-    i, err := requireInt32(cur.Token)
+    i, err := requireInt32(cur.Value)
     if err != nil {return 0, err}
     if err := ClearCommentNewLine(s); err != nil {return 0, err}
     return i, nil
@@ -227,24 +227,24 @@ func ParseSOA(name string, ttl int32, rdclass string, zstate *ZoneState, s *scan
     //fmt.Printf("ParseSOA rdclass='%s' rdtype='%s'\n", rdclass, "SOA")
     cur := <-s.Next();
     if err := goodToken(&cur); err != nil {return nil, err}
-    primary := TrueName(zstate, cur.Token)
+    primary := TrueName(zstate, cur.Value)
     //fmt.Printf("primary=%s\n", primary)
 
     cur = <-s.NextUntil(`[\n\(]`);
     if err := goodToken(&cur); err != nil {return nil, err}
-    contact := TrueName(zstate, cur.Token)
+    contact := TrueName(zstate, cur.Value)
     //fmt.Printf("contact=%s\n", contact)
 
     if err := ClearCommentNewLine(s); err != nil {return nil, err}
 
-    //fmt.Printf("peek='%s'\n", (<-s.Peek()).Token)
+    //fmt.Printf("peek='%s'\n", (<-s.Peek()).Value)
     cur = <-s.NextUntil(`[\(\n]`);
-    //fmt.Printf("lparen='%s'\n", cur.Token)
-    //fmt.Printf("peek='%s'\n", (<-s.Peek()).Token)
+    //fmt.Printf("lparen='%s'\n", cur.Value)
+    //fmt.Printf("peek='%s'\n", (<-s.Peek()).Value)
     if err := goodToken(&cur); err != nil {return nil, err}
-    if cur.Token != "(" {
+    if cur.Value != "(" {
         return nil, fmt.Errorf(
-            "Expected '(' in SOA definition but instead found '%s'\n", cur.Token)
+            "Expected '(' in SOA definition but instead found '%s'\n", cur.Value)
     }
 
     if err := ClearCommentNewLine(s); err != nil {return nil, err}
@@ -267,7 +267,7 @@ func ParseSOA(name string, ttl int32, rdclass string, zstate *ZoneState, s *scan
 
     cur = <-s.NextUntil(`[\)\n]`);
     if err := goodToken(&cur); err != nil {return nil, err}
-    minimum, err := requireInt32(cur.Token)
+    minimum, err := requireInt32(cur.Value)
     if err != nil {return nil, err}
     //fmt.Printf("minimum=%d\n", minimum)
 
@@ -275,9 +275,9 @@ func ParseSOA(name string, ttl int32, rdclass string, zstate *ZoneState, s *scan
     if err := ClearCommentNewLine(s); err != nil {return nil, err}
 
     cur = <-s.Next();
-    if cur.Token != ")" {
+    if cur.Value != ")" {
         return nil, fmt.Errorf(
-            "Expected ')' in SOA definition but instead found '%s'\n", cur.Token)
+            "Expected ')' in SOA definition but instead found '%s'\n", cur.Value)
     }
     soa := rdtype.SOA{name, ttl, primary, contact, serial, retry, refresh, expire, minimum}
     return rdtype.Rdtyper(soa), nil
