@@ -1,10 +1,9 @@
-package main
+package parse
 
 import (
     "testing"
     "fmt"
     "github.com/uberj/bindparse/scanner"
-    "github.com/uberj/bindparse/parse"
     "github.com/uberj/bindparse/rdtype"
 )
 
@@ -17,6 +16,10 @@ func AssertEqual(t *testing.T, is string, shouldbe string) bool {
     }
 }
 
+func setUp(input string) (*scanner.Scanner, *ZoneState) {
+    return &scanner.Scanner{Source: input}, &ZoneState{Origin: "example.com."}
+}
+
 func TestParseSOA_1(t *testing.T) {
     test_zone := `example.com.  3600  IN   SOA   ns.example.org. sysadmins.example.org. (
         2014021804     ; Serial
@@ -25,10 +28,9 @@ func TestParseSOA_1(t *testing.T) {
             1209600     ; Expire
             60     ; Minimum
     )`
-    s := &scanner.Scanner{Source: test_zone}
-    zs := &parse.ZoneState{Origin: "example.com."}
-    rdd := parse.NewRDTypeDispatch()
-    soa, err := parse.ParseRecord(zs, s, rdd)
+    s, zs := setUp(test_zone)
+    rdd := NewRDTypeDispatch()
+    soa, err := ParseRecord(zs, s, rdd)
     if err != nil {
         t.Fatalf("%s\n", err)
     }
@@ -44,10 +46,9 @@ func TestParseSOA_2(t *testing.T) {
             1209600     ; Expire
             60     ; Minimum
     )`
-    s := &scanner.Scanner{Source: string(test_zone)}
-    zs := &parse.ZoneState{Origin: "example.com."}
-    rdd := parse.NewRDTypeDispatch()
-    soa, err := parse.ParseRecord(zs, s, rdd)
+    s, zs := setUp(test_zone)
+    rdd := NewRDTypeDispatch()
+    soa, err := ParseRecord(zs, s, rdd)
     if err != nil {
         t.Fatalf("%s\n", err)
     }
@@ -58,10 +59,9 @@ func TestParseSOA_2(t *testing.T) {
 
 func TestParseSOA_3(t *testing.T) {
     test_zone := `example.com.  3600  IN   SOA   ns.example.org. sysadmins.example.org.(2014021804     180 180 1209600 60)`
-    s := &scanner.Scanner{Source: string(test_zone)}
-    zs := &parse.ZoneState{Origin: "example.com."}
-    rdd := parse.NewRDTypeDispatch()
-    soa, err := parse.ParseRecord(zs, s, rdd)
+    s, zs := setUp(test_zone)
+    rdd := NewRDTypeDispatch()
+    soa, err := ParseRecord(zs, s, rdd)
     if err != nil {
         t.Fatalf("%s\n", err)
     }
@@ -72,10 +72,9 @@ func TestParseSOA_3(t *testing.T) {
 
 func TestParseSOA_4(t *testing.T) {
     test_zone := `@ 3600  IN   SOA   ns.example.org. sysadmins.example.org.(2014021804     180 180 1209600 60)`
-    s := &scanner.Scanner{Source: string(test_zone)}
-    zs := &parse.ZoneState{Origin: "example.com."}
-    rdd := parse.NewRDTypeDispatch()
-    soa, err := parse.ParseRecord(zs, s, rdd)
+    s, zs := setUp(test_zone)
+    rdd := NewRDTypeDispatch()
+    soa, err := ParseRecord(zs, s, rdd)
     if err != nil {
         t.Fatalf("%s\n", err)
     }
@@ -86,10 +85,9 @@ func TestParseSOA_4(t *testing.T) {
 
 func TestParseSOA_5(t *testing.T) {
     test_zone := `@ IN   SOA   ns.example.org. sysadmins.example.org.(2014021804     180 180 1209600 60)`
-    s := &scanner.Scanner{Source: string(test_zone)}
-    zs := &parse.ZoneState{Origin: "example.com."}
-    rdd := parse.NewRDTypeDispatch()
-    soa, err := parse.ParseRecord(zs, s, rdd)
+    s, zs := setUp(test_zone)
+    rdd := NewRDTypeDispatch()
+    soa, err := ParseRecord(zs, s, rdd)
     if err != nil {
         t.Fatalf("%s\n", err)
     }
@@ -100,10 +98,9 @@ func TestParseSOA_5(t *testing.T) {
 
 func TestParseSOA_6(t *testing.T) {
     test_zone := `IN   SOA   ns.example.org. sysadmins.example.org.(2014021804     180 180 1209600 60)`
-    s := &scanner.Scanner{Source: string(test_zone)}
-    zs := &parse.ZoneState{Origin: "example.com."}
-    rdd := parse.NewRDTypeDispatch()
-    soa, err := parse.ParseRecord(zs, s, rdd)
+    s, zs := setUp(test_zone)
+    rdd := NewRDTypeDispatch()
+    soa, err := ParseRecord(zs, s, rdd)
     if err != nil {
         t.Fatalf("%s\n", err)
     }
@@ -114,8 +111,8 @@ func TestParseSOA_6(t *testing.T) {
 
 
 func TestTrueName(t *testing.T) {
-    zs := &parse.ZoneState{Origin: "example.com."}
-    AssertEqual(t, "foo.bar.example.com.", parse.TrueName(zs, "foo.bar"))
-    AssertEqual(t, "example.com.", parse.TrueName(zs, "@"))
-    AssertEqual(t, "bar.example.com.", parse.TrueName(zs, "bar.example.com."))
+    zs := &ZoneState{Origin: "example.com."}
+    AssertEqual(t, "foo.bar.example.com.", TrueName(zs, "foo.bar"))
+    AssertEqual(t, "example.com.", TrueName(zs, "@"))
+    AssertEqual(t, "bar.example.com.", TrueName(zs, "bar.example.com."))
 }
