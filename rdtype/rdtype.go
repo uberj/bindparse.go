@@ -19,7 +19,7 @@ type SOA struct {
 }
 
 func (soa SOA) String() string {
-    return fmt.Sprintf("%s %d %s %s (%d %d %d %d %d)",
+    return fmt.Sprintf("%s %d SOA IN %s %s (%d %d %d %d %d)",
         soa.Name,
         soa.Ttl,
         soa.Primary,
@@ -29,4 +29,17 @@ func (soa SOA) String() string {
         soa.Refresh,
         soa.Expire,
         soa.Minimum)
+}
+
+type NS struct {
+    Name string
+    Ttl int32
+    TargetName string
+}
+
+func (soa NS) String() string {
+    return fmt.Sprintf("%s %d NS IN %s",
+        soa.Name,
+        soa.Ttl,
+        soa.TargetName)
 }

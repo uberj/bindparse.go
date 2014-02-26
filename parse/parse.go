@@ -39,13 +39,14 @@ func NewRDTypeDispatch() *rdTypeDispatch {
             zstate *ZoneState,
             s *scanner.Scanner) (rdtype.Rdtyper, error) {
             "SOA": ParseSOA,
+            "NS": ParseNS,
         },
     }
 }
 
 // RDCLASS
 
-func TrueName(zstate *ZoneState, name string) string {
+func trueName(zstate *ZoneState, name string) string {
     // If name is @ return origin
     // If name doesn't end with root append origin
     if name == "@" {
@@ -116,7 +117,7 @@ func ParseRecord(zstate *ZoneState, s *scanner.Scanner, dispatch *rdTypeDispatch
             case 0:
                 <-s.Next()
                 <-s.Next()
-                name = TrueName(zstate, "@")
+                name = trueName(zstate, "@")
                 ttl = zstate.Ttl
                 goto DISPATCH
             case 1:
@@ -128,10 +129,10 @@ func ParseRecord(zstate *ZoneState, s *scanner.Scanner, dispatch *rdTypeDispatch
                 // name class type
                 ttl_, is_ttl := strconv.ParseInt(tokens[0].Value, 0, 64)
                 if is_ttl != nil {
-                    name = TrueName(zstate, tokens[0].Value)
+                    name = trueName(zstate, tokens[0].Value)
                     ttl = zstate.Ttl
                 } else {
-                    name = TrueName(zstate, "@")
+                    name = trueName(zstate, "@")
                     ttl = int32(ttl_)
                 }
                 goto DISPATCH
@@ -140,7 +141,7 @@ func ParseRecord(zstate *ZoneState, s *scanner.Scanner, dispatch *rdTypeDispatch
                 <-s.Next()
                 <-s.Next()
                 <-s.Next()
-                name = TrueName(zstate, tokens[0].Value)
+                name = trueName(zstate, tokens[0].Value)
                 ttl_, err := strconv.ParseInt(tokens[1].Value, 0, 64)
                 if err != nil {
                     return nil, err
@@ -151,19 +152,25 @@ func ParseRecord(zstate *ZoneState, s *scanner.Scanner, dispatch *rdTypeDispatch
         }
     }
 
+    return nil, fmt.Errorf("Could not parse a record!\n")
 DISPATCH:
+    //fmt.Printf("rdclass='%s' rdtype='%s'\n", rdclass, rdtype_)
     return dispatch.RDType[rdtype_](name, ttl, rdclass, zstate, s)
 }
 
 func ParseComment(s *scanner.Scanner) (bool, string, error) {
     // ParseComment: Consume a comment if it exists. Stop leaving \n next
+    // return:
+    //  - bool: if a comment was parsed
+    //  - string: the comment that was parsed
+    //  - error: errors
     next := <-s.PeekUntil(`[\n;]`);
     if next.Value != ";" {
         return false, "", nil
     }
     for {
         peek := <-s.Peek()
-        if peek.Value == "\n" {
+        if peek.Value == "\n" || peek.End {
             break
         }
         <-s.Next()
@@ -219,6 +226,46 @@ func parseSOAInt32(s *scanner.Scanner, cur scanner.Token) (int32, error) {
     return i, nil
 }
 
+func requireDNSName(name *string) error {
+    // TODO
+    return nil
+}
+
+func ParseDirective(zstate *ZoneState, s *scanner.Scanner) ([]rdtype.Rdtyper, error) {
+    // Assume s.Peek() is looking at $<something>  #someoneelsesjob
+    // $TTL sets zstate.Ttl
+    // $ORIGIN sets zstate.Origin
+    // $GENERATE returns []rdtype.RDtyper
+    var value string
+    directive := (<-s.Next()).Value
+    switch directive {
+    case "$TTL":
+        value = (<-s.Next()).Value
+        if ttl, err := strconv.ParseInt(value, 0, 64); err == nil {
+            zstate.Ttl = int32(ttl)
+        } else {
+            return nil, fmt.Errorf("Unable to parse value '%s' as valid ttl\n", ttl)
+        }
+        if _, _, err := ParseComment(s); err != nil {return nil, err}
+    case "$ORIGIN":
+        value = (<-s.Next()).Value
+        if err := requireDNSName(&value); err != nil {
+            return nil, err
+        }
+        zstate.Origin = trueName(zstate, value)
+        if _, _, err := ParseComment(s); err != nil {return nil, err}
+    case "$GENERATE":
+        //TODO
+        goto ERROR
+    }
+
+    goto SUCCESS
+ERROR:
+    return nil, fmt.Errorf("Unknown directive '%s'\n", directive)
+SUCCESS:
+    return nil, nil
+}
+
 func ParseSOA(name string, ttl int32, rdclass string, zstate *ZoneState, s *scanner.Scanner) (rdtype.Rdtyper, error) {
     // Assume scanner is currently on rdtype
     // We expect to see:
@@ -227,12 +274,12 @@ func ParseSOA(name string, ttl int32, rdclass string, zstate *ZoneState, s *scan
     //fmt.Printf("ParseSOA rdclass='%s' rdtype='%s'\n", rdclass, "SOA")
     cur := <-s.Next();
     if err := goodToken(&cur); err != nil {return nil, err}
-    primary := TrueName(zstate, cur.Value)
+    primary := trueName(zstate, cur.Value)
     //fmt.Printf("primary=%s\n", primary)
 
     cur = <-s.NextUntil(`[\n\(]`);
     if err := goodToken(&cur); err != nil {return nil, err}
-    contact := TrueName(zstate, cur.Value)
+    contact := trueName(zstate, cur.Value)
     //fmt.Printf("contact=%s\n", contact)
 
     if err := ClearCommentNewLine(s); err != nil {return nil, err}
@@ -281,4 +328,13 @@ func ParseSOA(name string, ttl int32, rdclass string, zstate *ZoneState, s *scan
     }
     soa := rdtype.SOA{name, ttl, primary, contact, serial, retry, refresh, expire, minimum}
     return rdtype.Rdtyper(soa), nil
+}
+
+func ParseNS(name string, ttl int32, rdclass string, zstate *ZoneState, s *scanner.Scanner) (rdtype.Rdtyper, error) {
+    cur := <-s.Next()
+    if err := goodToken(&cur); err != nil {return nil, err}
+    targetName := trueName(zstate, cur.Value)
+    if err := requireDNSName(&cur.Value); err != nil {return nil, err}
+    ns := rdtype.NS{name, ttl, targetName}
+    return rdtype.Rdtyper(ns), nil
 }

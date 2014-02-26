@@ -50,7 +50,7 @@ func (s *Scanner) consumen(curidx *int, r *regexp.Regexp, n int) bool {
 
 func (s *Scanner) Peekn(n int) chan Token {
     fake_curidx := s.curidx
-    return s.next(`\n`, &fake_curidx, n)
+    return s.next(`[\n;]`, &fake_curidx, n)
 }
 
 func (s *Scanner) PeekUntil(pattern string) chan Token {
@@ -60,11 +60,11 @@ func (s *Scanner) PeekUntil(pattern string) chan Token {
 
 func (s *Scanner) Peek() chan Token {
     fake_curidx := s.curidx
-    return s.next(`\n`, &fake_curidx, 1)
+    return s.next(`[\n;]`, &fake_curidx, 1)
 }
 
 func (s *Scanner) Next() chan Token {
-    return s.next(`\n`, &s.curidx, 1)
+    return s.next(`[\n;]`, &s.curidx, 1)
 }
 
 func (s *Scanner) NextUntil(pattern string) chan Token {

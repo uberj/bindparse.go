@@ -21,17 +21,6 @@ func main() {
     var n scanner.Token
     //s := scanner.Scanner{Source: string(content)}
     s := &scanner.Scanner{Source: string(content)}
-    cur := <-s.NextUntil(`[\(\n]`);
-    fmt.Printf("cur='%s'\n", cur.Value)
-    cur = <-s.NextUntil(`[\(\n]`);
-    fmt.Printf("cur='%s'\n", cur.Value)
-    cur = <-s.NextUntil(`[\(\n]`);
-    fmt.Printf("cur='%s'\n", cur.Value)
-    return
-    peeker := s.Peekn(3)
-    fmt.Printf("peek1='%s'\n", (<-peeker).Value)
-    fmt.Printf("peek2='%s'\n", (<-peeker).Value)
-    fmt.Printf("peek3='%s'\n", (<-peeker).Value)
     i := 1
     for {
         if n = <-s.Next(); n.End {
